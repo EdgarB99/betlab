@@ -7,6 +7,8 @@ import { EventsModule } from "./events/events.module";
 import { HealthModule } from "./health/health.module";
 import { FootballModule } from "./football/football.module";
 import { UsersModule } from "./users/users.module";
+import { YugiohModule } from "./yugioh/yugioh.module";
+import { CreateYugiohModule1760000000000 } from "./yugioh/migrations/1760000000000-CreateYugiohModule";
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { UsersModule } from "./users/users.module";
         database: c.get("DB_NAME", "betlab"),
         autoLoadEntities: true,
         synchronize: c.get("NODE_ENV") !== "production",
+        migrations: [CreateYugiohModule1760000000000],
+        migrationsRun: c.get("NODE_ENV") === "production",
       }),
     }),
     AuthModule,
@@ -30,6 +34,7 @@ import { UsersModule } from "./users/users.module";
     BetsModule,
     HealthModule,
     FootballModule,
+    YugiohModule,
   ],
 })
 export class AppModule {}

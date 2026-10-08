@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "outDir": "./test-dist", "declaration": false, "incremental": false },
-  "include": ["src/football/**/*.spec.ts"]
+  "include": ["src/football/**/*.spec.ts", "src/yugioh/**/*.spec.ts"]
 }

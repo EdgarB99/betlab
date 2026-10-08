@@ -177,3 +177,36 @@ Consulta después `/api/users/me` y `/api/bets/me` con el mismo header para ver 
 8. Ambos `Dockerfile`: diferencia entre construcción y ejecución.
 
 La estructura se mantiene intencionalmente pequeña: un monolito NestJS, una SPA Angular, una base y un proxy; sin tecnologías adicionales que oculten los conceptos de despliegue.
+
+## Módulo de ligas Yu-Gi-Oh!
+
+La ruta pública `/yugioh` muestra ligas, participantes, jornadas, resultados y clasificación. `/yugioh/admin` requiere una sesión BetLab y permite crear una liga; el creador se registra como `ADMIN` exclusivamente de esa liga. Los usuarios existentes no reciben permisos automáticos. Un `ADMIN` puede configurar la liga, administrar participantes y personal, crear jornadas, confirmar pareos, corregir resultados, exportar y finalizar. Un `STAFF` sólo puede registrar o corregir resultados. Todas las comprobaciones se realizan también en NestJS.
+
+El dominio usa las tablas `yugioh_leagues`, `yugioh_players`, `yugioh_league_participants`, `yugioh_rounds`, `yugioh_matches` y `yugioh_league_staff`. La clasificación se recalcula desde los resultados, no mantiene contadores duplicados. Una restricción parcial de PostgreSQL y una transacción serializable garantizan una sola jornada abierta por liga. Los BYE quedan completos al generarse y se intenta asignarlos primero a quien tenga menos descansos.
+
+La migración aditiva está en `backend/src/yugioh/migrations/1760000000000-CreateYugiohModule.ts`. En producción se ejecuta al iniciar TypeORM; en el Compose de laboratorio continúa activo `synchronize` porque `NODE_ENV=development`. La migración no modifica ni elimina tablas existentes.
+
+### API Yu-Gi-Oh!
+
+Consultas públicas:
+
+- `GET /api/yugioh/leagues` y `GET /api/yugioh/leagues/:id`
+- `GET /api/yugioh/leagues/:id/participants`
+- `GET /api/yugioh/leagues/:id/rounds` y `GET /api/yugioh/rounds/:id`
+- `GET /api/yugioh/leagues/:id/standings`
+- `GET /api/yugioh/players/:id`
+
+Operaciones con JWT y permiso por liga:
+
+- `POST/PATCH /api/yugioh/leagues[/:id]`, `POST .../:id/finish|reopen`
+- `POST/PATCH /api/yugioh/leagues/:id/participants[/:participantId]`
+- `POST /api/yugioh/leagues/:id/rounds`
+- `POST /api/yugioh/rounds/:id/generate-pairings|confirm`
+- `PATCH /api/yugioh/rounds/:id/pairings`
+- `PATCH /api/yugioh/matches/:id/result`
+- `POST /api/yugioh/leagues/:id/staff`
+- `GET /api/yugioh/leagues/:id/export`
+
+Para probarlo, ejecuta `docker compose up -d --build`, abre `/register`, crea una cuenta y entra en `/yugioh/admin`. Crea la liga, registra al menos dos participantes, crea una jornada, genera y confirma los pareos y registra cada resultado. La siguiente jornada permanece bloqueada hasta resolver todos los enfrentamientos. `npm test` dentro de `backend` ejecuta las pruebas de fútbol y del algoritmo/clasificación Yu-Gi-Oh!.
+
+La fase eliminatoria está diseñada como una extensión posterior y no se presenta como disponible: este MVP implementa por completo la liga regular. La importación de respaldos también queda para una iteración posterior; la exportación JSON versionada sí está operativa.
