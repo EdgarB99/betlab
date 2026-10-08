@@ -3,5 +3,6 @@ node_modules/
 dist/
 .angular/
 coverage/
+test-dist/
+out-tsc/
 .DS_Store
-

@@ -45,7 +45,14 @@ El navegador llama rutas relativas `/api`. Nginx decide el destino: `/` va al se
 - `GET /api/users/me` (JWT).
 - `GET /api/events`, `GET /api/events/:id`.
 - `POST /api/bets`, `GET /api/bets/me` (JWT).
+- Football Simulator en `/football`: equipos, ligas, jornadas, partidos y clasificación.
+- `GET/POST /api/football/teams`, `GET/POST /api/football/leagues`.
+- `POST /api/football/leagues/:id/schedule` genera el calendario todos contra todos.
+- `POST /api/football/matches/:id/simulate` y `POST /api/football/leagues/:id/rounds/:round/simulate`.
+- `GET /api/football/matches/:id/probabilities` y `GET /api/football/leagues/:id/standings`.
 - `GET /health`.
+
+El simulador vive en un módulo NestJS independiente del sistema de apuestas. Su motor calcula goles esperados a partir de ataque, defensa, diferencia de fuerza y localía; después utiliza una distribución de Poisson. El generador aleatorio está abstraído para permitir pruebas deterministas. Las probabilidades local/empate/visitante se exponen como contrato neutral para una futura conversión a cuotas.
 
 Al apostar, el cliente sólo envía `eventId`, `selection` y `amount`. El servicio abre una transacción, bloquea la fila del usuario, vuelve a leer evento y cuota, valida estado/fecha/saldo, calcula el pago, descuenta saldo y crea la apuesta. Si algo falla, PostgreSQL revierte todo. Los importes se redondean a centavos y las columnas usan `decimal`.
 
